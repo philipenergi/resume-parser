@@ -108,12 +108,10 @@ async function testHmacGeneration() {
     });
 
     if (response.ok) {
-      const result = await response.json();
+      const signature = await response.text();
       console.log("✅ HMAC-SHA512 generation successful!");
-      console.log(`🔐 Algorithm: ${result.algorithm}`);
-      console.log(`📝 Data length: ${result.dataLength} characters`);
-      console.log(`🔑 Signature: ${result.signature}`);
-      console.log(`⏰ Generated at: ${result.generatedAt}`);
+      console.log(`🔑 Signature: ${signature}`);
+      console.log(`📝 Signature length: ${signature.length} characters`);
       return true;
     } else {
       const error = await response.json();

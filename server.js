@@ -258,7 +258,9 @@ app.post("/generate-hmac", async (req, res) => {
       `Generated HMAC-SHA512 signature for data of length: ${data.length}`
     );
 
-    res.json(signature);
+    // Return just the signature as plain text without quotes
+    res.set("Content-Type", "text/plain");
+    res.send(signature);
   } catch (error) {
     console.error("HMAC generation error:", error);
 
