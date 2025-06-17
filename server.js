@@ -6,6 +6,7 @@ const helmet = require("helmet");
 const morgan = require("morgan");
 const fs = require("fs");
 const path = require("path");
+const crypto = require("crypto");
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -75,6 +76,7 @@ app.get("/", (req, res) => {
     endpoints: {
       "POST /extract-text": "Extract text from uploaded PDF file",
       "POST /extract-text-url": "Extract text from PDF URL",
+      "POST /generate-hmac": "Generate HMAC-SHA512 signature",
       "GET /health": "Health check endpoint",
     },
   });
@@ -210,6 +212,58 @@ app.post("/extract-text-url", async (req, res) => {
 
     res.status(500).json({
       error: "Failed to extract text from PDF URL",
+      message: error.message,
+      success: false,
+    });
+  }
+});
+
+// HMAC-SHA512 signature generation endpoint
+app.post("/generate-hmac", async (req, res) => {
+  try {
+    const { data, secret } = req.body;
+
+    // Validate input
+    if (!data) {
+      return res.status(400).json({
+        error: "Missing data parameter",
+        message: 'Please provide a "data" field with the data to sign',
+        success: false,
+      });
+    }
+
+    if (!secret) {
+      return res.status(400).json({
+        error: "Missing secret parameter",
+        message: 'Please provide a "secret" field with the signing key',
+        success: false,
+      });
+    }
+
+    // Generate HMAC-SHA512 signature
+    const hmac = crypto.createHmac("sha512", secret);
+    hmac.update(data);
+    const signature = hmac.digest("hex");
+
+    const result = {
+      success: true,
+      data: data,
+      signature: signature,
+      algorithm: "HMAC-SHA512",
+      generatedAt: new Date().toISOString(),
+      dataLength: data.length,
+    };
+
+    console.log(
+      `Generated HMAC-SHA512 signature for data of length: ${data.length}`
+    );
+
+    res.json(result);
+  } catch (error) {
+    console.error("HMAC generation error:", error);
+
+    res.status(500).json({
+      error: "Failed to generate HMAC signature",
       message: error.message,
       success: false,
     });
